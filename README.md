@@ -177,3 +177,10 @@ sudo apt-get update
 
 sudo apt-get install trivy
 
+### OWASP Dependency Check
+stage('OWASP Dependency Check') {
+    steps {
+        dependencyCheck additionalArguments: ' --scan ./ ', odcInstallation: 'DC'
+        dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+    }
+}
