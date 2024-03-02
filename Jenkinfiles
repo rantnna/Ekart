@@ -1,0 +1,71 @@
+pipeline {
+    agent any
+    
+    tools {
+        jdk 'jdk17'
+        maven 'maven3'
+    }
+    
+    environment {
+        SCANNER_HOME=tool 'sonar-scanner'
+    }
+
+    stages {
+        stage('Git Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/rantnna/Ekart.git'
+            }
+        }
+        
+        stage('Compile') {
+            steps {
+                sh "mvn compile"
+            }
+        }
+        
+        stage('Test case') {
+            steps {
+                sh "mvn test -DskipTests=true"
+            }
+        }
+        
+        stage('OWASP Dependency Check') {
+            steps {
+                dependencyCheck additionalArguments: ' --scan ./ ', odcInstallation: 'DC'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
+        
+        stage('Sonarqube Analysis') {
+            steps {
+                script {
+                    withSonarQubeEnv('sonar') {
+                    sh """${SCANNER_HOME}/bin/sonar-scanner \
+                    -Dsonar.projectName=Ekart \
+                    -Dsonar.projectKey=Ekart \
+                    -Dsonar.java.binaries=target/classes """
+                    }
+                }
+            }
+        }
+
+        
+        stage('Trivy File scan') {
+            steps {
+                sh "trivy fs ."
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                sh "mvn package -DskipTests=true"
+            }
+        }
+        
+        stage('Hello') {
+            steps {
+                echo 'Hello World'
+            }
+        }
+    }
+}
