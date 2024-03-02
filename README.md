@@ -165,3 +165,11 @@ jdbc:h2:mem:shopping_cart_db
 
 In `/src/main/resources/application.properties` file it is possible to change both
 web interface url path, as well as the datasource url.
+
+###  installation steps for Trivy to install in Ubuntu
+sudo apt-get install wget apt-transport-https gnupg lsb-release
+wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+sudo apt-get update
+sudo apt-get install trivy
+
