@@ -29,12 +29,7 @@ pipeline {
             }
         }
         
-        stage('OWASP Dependency Check') {
-            steps {
-                dependencyCheck additionalArguments: ' --scan ./ ', odcInstallation: 'DC'
-                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-            }
-        }
+        
         
         stage('Sonarqube Analysis') {
             steps {
@@ -62,9 +57,41 @@ pipeline {
             }
         }
         
-        stage('Hello') {
+        stage('Build and Tag Docker Image') {
             steps {
-                echo 'Hello World'
+                script{
+                    withDockerRegistry(credentialsId: 'docker_cred', toolName: 'docker') {
+                        sh "docker build -t shopping-cart:dev -f docker/Dockerfile . "
+                        sh "docker tag shopping-cart:dev ranjitdkr/shopping-cart:dev"
+                    }
+                }
+               
+            }
+        }
+        
+        
+        
+        stage('Push Docker Image') {
+            steps {
+                script{
+                    withDockerRegistry(credentialsId: 'docker_cred', toolName: 'docker') {
+                        
+                        sh "docker push ranjitdkr/shopping-cart:dev"
+                    }
+                }
+               
+            }
+        }
+        
+        stage('Deploy to Docker Container') {
+            steps {
+                script{
+                    withDockerRegistry(credentialsId: 'docker_cred', toolName: 'docker') {
+                        
+                        sh "docker run -d -p 8070:8070 ranjitdkr/shopping-cart:dev"
+                    }
+                }
+               
             }
         }
     }
